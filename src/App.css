@@ -1,0 +1,19 @@
+.gradient-custom {
+    background-color:#99faff;
+    background-image:
+    radial-gradient(at 25% 74%, hsla(187,69%,69%,1) 0px, transparent 50%),
+    radial-gradient(at 38% 26%, hsla(97,66%,63%,1) 0px, transparent 50%),
+    radial-gradient(at 84% 80%, hsla(117,72%,66%,1) 0px, transparent 50%),
+    radial-gradient(at 67% 41%, hsla(107,92%,74%,1) 0px, transparent 50%),
+    radial-gradient(at 12% 97%, hsla(108,100%,60%,1) 0px, transparent 50%),
+    radial-gradient(at 94% 9%, hsla(208,80%,67%,1) 0px, transparent 50%),
+    radial-gradient(at 55% 76%, hsla(237,54%,37%,1) 0px, transparent 50%);
+    }
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.47)!important;
+    border-radius: 16px!important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1)!important;
+    backdrop-filter: blur(5.8px)!important;
+    -webkit-backdrop-filter: blur(5.8px)!important;
+}
