@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const session = require('express-session');
 const crypto = require('crypto');
+var cors = require("cors");
 
 const app = express();
 const port = 3110;
@@ -14,7 +15,10 @@ app.use(function(req, res, next) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
-
+app.use(express.static("public"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 function generateRandomString(length) {
   const symbols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -33,7 +37,7 @@ app.use(bodyParser.json());
 
 
 const connection = mysql.createConnection({
-  host: '192.168.43.31',
+  host: '127.0.0.1',
   user: 'root',
   password: '',
   database: 'stats-report'
@@ -56,31 +60,43 @@ function hashPassword(password) {
     return hash.digest('hex');
   }
 
+  const rand = () =>
+  Math.random()
+    .toString(36)
+    .substr(2);
+
+  app.get("/get", (req, res) => {
+    return res.json({ getval: rand() });
+  });
+  
+  //POST
+  app.post("/post", function(req, res) {
+    return res.json({ postval: `${rand()}:${JSON.stringify(req.body)}` });
+  });
+
+
 app.get('/api/testServerApi', (req, res) => {
       res.status(200).json( { success: true, message: 'API работает' } );
 });
-app.get('/api/login', (req, res) => {
-    const login = req.params.login;
-    const password = req.params.password;
-    console.log(`body: ${JSON.stringify(req.params)}; login: ${login}; password: ${password}`);
-    const query = 'SELECT * FROM users WHERE login = ? AND password = ?';
-    connection.query(query, [login, password], (error, results) => {
-      if (error) {
-        console.error('Error executing the query:', error);
-        res.status(500).json({ success: false });
+app.post('/api/login', (req, res) => {
+  const { userName, password } = req.body;
+  const query = `SELECT * FROM users WHERE login = ? AND password = ?`;
+  connection.query(query, [userName, hashPassword(password)], (error, results) => {
+    if (error) {
+      console.error('Ошибка выполнения запроса:', error);
+      res.status(500).json({ success: false });
+    } else {
+      if (results.length > 0) {
+        const userId = results[0].id;
+        res.json({ success: true, id: userId, authkey: `${rand()}-${rand()}-${rand()}-${userId}`});
       } else {
-        if (results.length > 0) {
-          const userId = results[0].id;
-          res.json({ success: true, id: userId });
-        } else {
-          res.status(401).json({ success: false, message: 'Неправильное имя пользователя или пароль' });
-        }
+        res.json({ success: false, message: 'Неправильное имя пользователя или пароль' });
       }
-    });
+    }
   });
-
+});
 
 app.listen(port, () => {
     console.log(`Сервер запущен на порту: ${port}`);
     console.log(`Используй: localhost:${port}/api/testServerApi`);
-});a
+});

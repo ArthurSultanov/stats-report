@@ -11,8 +11,8 @@ function App() {
   return (
     <Router>
         <Routes>
-          <Route path="/" element={<Login/>} />
-          <Route path="/tables" element={<Template_table/>} />
+          <Route path="/" element={<Template_table/>} />
+          <Route path="/login" element={<Login/>} />
         </Routes>
       </Router>
   )
