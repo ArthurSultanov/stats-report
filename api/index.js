@@ -33,7 +33,7 @@ app.use(bodyParser.json());
 
 
 const connection = mysql.createConnection({
-  host: '127.0.0.1',
+  host: '192.168.43.31',
   user: 'root',
   password: '',
   database: 'stats-report'
@@ -83,4 +83,4 @@ app.get('/api/login', (req, res) => {
 app.listen(port, () => {
     console.log(`Сервер запущен на порту: ${port}`);
     console.log(`Используй: localhost:${port}/api/testServerApi`);
-});
+});a

@@ -4,7 +4,6 @@ function Login() {
     const [login, setLogin] = useState('');
     const [password, setPassword] = useState('');
     const [authResult, setAuthResult] = useState(null);
-
   const handleLoginPressButton = async () => {
     console.log(JSON.stringify({ login, password }));
     try {
@@ -61,17 +60,20 @@ function Login() {
                   <button className="btn btn-outline-dark btn-lg ms-2 px-5">
                     Забыли пароль?
                   </button>
+                  <a href="/tables" className="btn btn-outline-dark btn-lg ms-2 px-5">
+                  tables
+                  </a>
                 </div>
 
                 {authResult === true && (
                   <div className="alert alert-success" role="alert">
-                    Success auth
+                    Успешно
                   </div>
                 )}
 
                 {authResult === false && (
                   <div className="alert alert-danger" role="alert">
-                    Authentication failed :(
+                    Авторизация неудалась :(
                   </div>
                 )}
 
