@@ -78,9 +78,25 @@ function hashPassword(password) {
 app.get('/api/testServerApi', (req, res) => {
       res.status(200).json( { success: true, message: 'API работает' } );
 });
+
+app.get('/api/getUserInfo/:uid', (req, res) => {
+ 	 const userid = req.params.uid;
+ 	 console.log(`GET INFO ID: ${userid}`);
+	 const query = 'SELECT * FROM users WHERE id = ?';
+	 connection.query(query, [userid], (err, results) => {
+	    if (err) throw err;
+	    
+	    if (results.length > 0) {
+	      const users = results[0];
+	      res.json(users);
+	    } else {
+	      res.status(404).json({ error: 'Пользователь не найден' });
+	    }
+	  });
+});
+
 app.post('/api/login', (req, res) => {
   const { userName, password } = req.body;
-  console.log(`${userName} -------------------- ${password}`);
   const query = `SELECT * FROM users WHERE login = ? AND password = ?`;
   connection.query(query, [userName, hashPassword(password)], (error, results) => {
     if (error) {
@@ -90,8 +106,8 @@ app.post('/api/login', (req, res) => {
       if (results.length > 0) {
         const userId = results[0].id;
         authkey = `${rand()}-${rand()}-${rand()}-${userId};`
-        const log_sql = 'UPDATE users SET authkey = ?, WHERE id = ?';
-
+        const log_sql = 'UPDATE users SET authkey = ? WHERE id = ?';
+        delete results[0].password;
         connection.query(log_sql, [authkey, userId], (err) => {
           if (err) {
             console.error('Ошибка при обновлении: ' + err);
@@ -99,7 +115,7 @@ app.post('/api/login', (req, res) => {
             return;
           }
         else{
-          res.json({ success: true, id: userId, authkey: `${authkey}`});
+          res.json({ success: true, id: userId, authkey: `${authkey}`, userInfo: results[0]});
         }});
 
       } else {
@@ -109,6 +125,85 @@ app.post('/api/login', (req, res) => {
   });
 });
 
+
+app.post('/api/addWorkExperience', (req, res) => {
+  const { user_id, table } = req.body;
+
+  connection.query('INSERT INTO employee_work_exp (id_user) VALUES (?)', [user_id], (err, result) => {
+    if (err) {
+      console.error('Ошибка при вставке в employee_work_exp:', err);
+      res.status(500).send('Ошибка сервера');
+    } else {
+      const expId = result.insertId;
+
+      table.forEach((row) => {
+        const { name_of_indicators, common, teacher } = row;
+        not_exp = teacher.col18;
+        delete teacher.col18
+        connection.query(
+          'INSERT INTO employee_work_exp_body (id_doc, name_of_indicators, all_exp, teach_exp, not_exp) VALUES (?, ?, ?, ?, ?)',
+          [expId, name_of_indicators, JSON.stringify(common), JSON.stringify(teacher), not_exp],
+          (err) => {
+            if (err) {
+              console.error('Ошибка при вставке в employee_work_exp_body:', err);
+              res.status(500).send('Ошибка сервера');
+            }
+          }
+        );
+      });
+
+      res.status(200).send('Данные успешно добавлены');
+    }
+  });
+});
+
+app.get('/api/dataExpEmployee/:id_doc', async (req, res) => {
+  const id_doc = req.params.id_doc;
+  const query = `
+    SELECT
+      u.login,
+      u.complectName,
+      ewe.dateCreate,
+      ewe.id_user,
+      eweb.name_of_indicators,
+      eweb.all_exp,
+      eweb.teach_exp,
+      eweb.not_exp
+    FROM
+      employee_work_exp_body AS eweb
+    JOIN
+      employee_work_exp AS ewe ON eweb.id_doc = ewe.id
+    JOIN
+      users AS u ON ewe.id_user = u.id
+    WHERE
+      eweb.id_doc = ?
+  `;
+  connection.query(query, [id_doc], (err, results) => {
+    if (err) throw err;
+    if (results.length > 0) {
+      // Используем первый элемент массива, так как данные из users и employee_work_exp будут одинаковыми для всех записей
+      const firstResult = results[0];
+
+      // Формируем результирующий объект JSON
+      const resultObject = {
+        login: firstResult.login,
+        complectName: firstResult.complectName,
+        dateCreate: firstResult.dateCreate,
+        id_user: firstResult.id_user,
+        table: results.map((row) => ({
+          name_of_indicators: row.name_of_indicators,
+          all_exp: row.all_exp,
+          teach_exp: row.teach_exp,
+          not_exp: row.not_exp,
+        })),
+      };
+
+      res.json(resultObject);
+    } else {
+      res.status(404).json({ error: 'Таблица не найдена' });
+    }
+  });
+});
 
 
 app.listen(port, () => {

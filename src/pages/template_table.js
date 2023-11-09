@@ -1,14 +1,23 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Table from './table';
-import { CheckAuth } from '../tech/checking';
+import { redirectToLogin} from '../tech/checking';
+import Header from './Header';
+import Index from './Index';
 
-const Template_table = () => {
-    CheckAuth(sessionStorage.getItem('auth'));
+const Template_table = () =>
+ {
+    useEffect(() => {
+        redirectToLogin();
+      }, []);
+
+
+
     return (
         <div>
-            <Table />
+            <Header />
+            <Index /> 
         </div>
     );
-};
+}; //  /* <Table /> */
 
 export default Template_table;
