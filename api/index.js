@@ -80,6 +80,7 @@ app.get('/api/testServerApi', (req, res) => {
 });
 app.post('/api/login', (req, res) => {
   const { userName, password } = req.body;
+  console.log(`${userName} -------------------- ${password}`);
   const query = `SELECT * FROM users WHERE login = ? AND password = ?`;
   connection.query(query, [userName, hashPassword(password)], (error, results) => {
     if (error) {
@@ -88,13 +89,27 @@ app.post('/api/login', (req, res) => {
     } else {
       if (results.length > 0) {
         const userId = results[0].id;
-        res.json({ success: true, id: userId, authkey: `${rand()}-${rand()}-${rand()}-${userId}`});
+        authkey = `${rand()}-${rand()}-${rand()}-${userId};`
+        const log_sql = 'UPDATE users SET authkey = ?, WHERE id = ?';
+
+        connection.query(log_sql, [authkey, userId], (err) => {
+          if (err) {
+            console.error('Ошибка при обновлении: ' + err);
+            res.status(500).json({ success: false, error: 'Ошибка ' });
+            return;
+          }
+        else{
+          res.json({ success: true, id: userId, authkey: `${authkey}`});
+        }});
+
       } else {
         res.json({ success: false, message: 'Неправильное имя пользователя или пароль' });
       }
     }
   });
 });
+
+
 
 app.listen(port, () => {
     console.log(`Сервер запущен на порту: ${port}`);

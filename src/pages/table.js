@@ -18,19 +18,19 @@ const Table = () => {
           <table className="table">
             <thead>
               <tr className="bg-light">
-                <th rowspan = {3} scope="col" width="5%">
+                <th rowSpan = {3} scope="col" width="3%">
                   <input className="form-check-input" type="checkbox" />
                 </th>
-                <th rowspan = {3} scope="col" width="20%">
+                <th rowSpan = {3} scope="col" width="20%">
                   Наименование образовательной организации (Автоматически)
                 </th>
-                <th rowspan = {2} scope="col" width="20%">
+                <th rowSpan = {2} scope="col" width="20%">
                   Наименование показателей
                 </th>
-                <th  rowspan = {3}scope="col" width="5%">
+                <th  rowSpan = {3}scope="col" width="5%">
                   № Строки
                 </th>
-                <th rowspan = {3} scope="col" width="5%">
+                <th rowSpan = {3} scope="col" width="5%">
                   Всего (сумма гр.4-9)
                 </th>
                 <th colSpan={6} scope="col" width="30%">
@@ -42,22 +42,22 @@ const Table = () => {
                 </th>
               </tr>
               <tr>
-              <th  scope="col" width="5%">
+              <th  scope="col" width="10%">
                   До 3
                 </th>
-                <th scope="col" width="5%">
+                <th scope="col" width="10%">
                   От 3 до 5
                 </th>
-                <th scope="col" width="5%">
+                <th scope="col" width="10%">
                   От 5 до 10
                 </th>
-                <th scope="col" width="5%">
+                <th scope="col" width="10%">
                   От 10 до 15
                 </th>
-                <th scope="col" width="5%">
+                <th scope="col" width="10%">
                   От 15 до 20
                 </th>
-                <th scope="col" width="5%">
+                <th scope="col" width="10%">
                   20 и более
                 </th>
               </tr>

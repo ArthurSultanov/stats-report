@@ -3,7 +3,7 @@ import { faClose } from '@fortawesome/free-solid-svg-icons'
 import React, { useState } from 'react';
 import { url_api } from '../tech/config';
 import { useNavigate } from "react-router-dom";
-
+import { G_user_info } from '../tech/global_vars';
 
 function Login() {
     const [login, setLogin] = useState('');
@@ -27,9 +27,10 @@ function Login() {
           const data = await response.json();
           if (data.success) {
             setAuthResult(true);
-
-            localStorage.setItem("auth", data.authkey);
-            navigate("/tables");
+              G_user_info.user_id = data.id;
+          console.log(`G_user_info.user_id: ${G_user_info.user_id}`)
+            sessionStorage.setItem("auth", data.authkey);
+            navigate("/");
           } else {
             setAuthResult(false);
 
