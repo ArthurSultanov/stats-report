@@ -1,7 +1,9 @@
-import React, {useState, useEffect} from 'react';
-import { Link } from 'react-router-dom';
 
-const Index = () => {
+import {  Link  } from 'react-router-dom';
+import Header from '../Header';
+import React, {useState, useEffect} from 'react';
+
+function A_Main() {
     const userInfo = JSON.parse(sessionStorage.getItem("userInfo")).userInfo;
     const [greeting, setGreeting] = useState('');
 
@@ -29,18 +31,45 @@ const Index = () => {
   
     return (
         <div>
-            <main>
+          <Header />
+          <main>
             <div className="container px-4 py-5" id="featured-3">
                 <h3 className="pb-2 border-bottom">{greeting}, <span className='font-weight-bold'>{userInfo.complectName}</span></h3>
                 <div className="row">
                     <div className="col-sm-6 pb-3">
                         <div className="card">
                         <div className="card-body">
-                            <h5 className="card-title">Стаж</h5>
+                            <h5 className="card-title">Организации</h5>
                             <p className="card-text">
-                            Распределение персонала по стажу работы (без внешних совместителей и работающих по договорам гражданско-правового характера)
+                            Управление организациями
                             </p>
-                            <Link to='/experience' className="btn btn-primary zoom-5">
+
+                            <Link to="/admin-panel/organizations" className="btn btn-primary">Перейти</Link>
+                        </div>
+                        </div>
+                    </div>
+                    <div className="col-sm-6 pb-3">
+                        <div className="card">
+                        <div className="card-body">
+                            <h5 className="card-title">Заявки</h5>
+                            <p className="card-text">
+                            Заявки на смену наименования организации / Почты / Паролей
+                            </p>
+                            <Link to='/admin-panel/accepts' className="btn btn-primary">
+                            Перейти
+                            </Link>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div className="col-sm-6 pb-3">
+                        <div className="card">
+                        <div className="card-body">
+                            <h5 className="card-title">Настройки</h5>
+                            <p className="card-text">
+                            Настройки стандартных значений
+                            </p>
+                            <Link to='/admin-panel/settings' className="btn btn-primary">
                             Перейти
                             </Link>
                         </div>
@@ -49,48 +78,45 @@ const Index = () => {
                     <div className="col-sm-6 pb-3">
                         <div className="card">
                         <div className="card-body">
-                            <h5 className="card-title">Образование</h5>
+                            <h5 className="card-title">Логи</h5>
                             <p className="card-text">
-                            Распределение численности основного персонала по уровню образования и полу (без внешних совместителей и работающих по договорам ГПХ)
+                            Журнал действий 
                             </p>
-                            <Link to='/eductions' className="btn btn-primary zoom-5">
+                            <Link to='/admin-panel/logs' className="btn btn-primary">
                             Перейти
                             </Link>
                         </div>
                         </div>
                     </div>
-
-                    <div className="col-sm-6">
+                    <div className="col-sm-6 pb-3">
                         <div className="card">
                         <div className="card-body">
-                            <h5 className="card-title">Инвалиды и лица с ОВЗ</h5>
+                            <h5 className="card-title">Пользователи</h5>
                             <p className="card-text">
-                            Сведения по численности студентов, относящихся к категории инвалиды и лица с ОВЗ, по специальностям, профессиям
+                            Список аккаунтов пользователей 
                             </p>
-                            <Link to='/invalid' className="btn btn-primary zoom-5">
+                            <Link to='/admin-panel/users' className="btn btn-primary">
                             Перейти
                             </Link>
                         </div>
                         </div>
                     </div>
-                    <div className="col-sm-6">
+                    <div className="col-sm-6 pb-3">
                         <div className="card">
                         <div className="card-body">
-                            <h5 className="card-title">Программы</h5>
+                            <h5 className="card-title">Не придумал</h5>
                             <p className="card-text">
-                            Перечень реализуемых образовательных программ среднего профессионального образования и информация по контингенту 
+                            ну а рил чё сюда вставить? рекламу крипто-биржи? 
                             </p>
-                            <Link to='/contingent' className="btn btn-primary zoom-5">
-                            Перейти
-                            </Link>
                         </div>
                         </div>
                     </div>
                 </div>
             </div>
             </main>
+    
         </div>
-    );
-};
+      );
+}
 
-export default Index;
+export default A_Main;

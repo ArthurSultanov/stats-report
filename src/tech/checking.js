@@ -1,5 +1,5 @@
 export const isAuthenticated = () => {
-    return sessionStorage.getItem('authIs') === 'true';
+    return sessionStorage.getItem('authIs') && sessionStorage.getItem('authIs') === 'true';
   };
   
   export const redirectToLogin = () => {
@@ -20,3 +20,23 @@ export const isAuthenticated = () => {
     sessionStorage.removeItem('userInfo');
     window.location.replace('http://localhost:3000/login');
   };
+
+
+  export const checkAdmin = async (authKey) => {
+
+      const response = await fetch('http://localhost:3110/api/checkAdmin/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ authkey: authKey }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Ошибка при запросе');
+      }
+  
+      const result = await response.json(); 
+      return result.isAdmin;
+  };
+  

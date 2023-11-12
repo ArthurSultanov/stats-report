@@ -18,6 +18,6 @@ const Template_table = () =>
             <Index /> 
         </div>
     );
-}; //  /* <Table /> */
+};
 
 export default Template_table;

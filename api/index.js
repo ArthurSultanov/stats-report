@@ -69,7 +69,6 @@ function hashPassword(password) {
     return res.json({ getval: rand() });
   });
   
-  //POST
   app.post("/post", function(req, res) {
     return res.json({ postval: `${rand()}:${JSON.stringify(req.body)}` });
   });
@@ -93,6 +92,25 @@ app.get('/api/getUserInfo/:uid', (req, res) => {
 	      res.status(404).json({ error: 'Пользователь не найден' });
 	    }
 	  });
+});
+
+app.post('/api/checkAdmin', (req, res) => {
+  const { authkey } = req.body;
+  const query = `
+    SELECT admin_lvl FROM users WHERE authkey = ?;
+  `;
+
+  connection.query(query, [authkey], (err, results) => {
+    if (err) throw err;
+    if (results.length > 0) {
+      const admin_lvl = results[0].admin_lvl;
+      const isAdmin = admin_lvl > 0;
+      
+      res.status(200).json({ isAdmin });
+    } else {
+      res.status(404).json({ error: 'Пользователь не найден' });
+    }
+  });
 });
 
 app.post('/api/login', (req, res) => {
@@ -181,10 +199,8 @@ app.get('/api/dataExpEmployee/:id_doc', async (req, res) => {
   connection.query(query, [id_doc], (err, results) => {
     if (err) throw err;
     if (results.length > 0) {
-      // Используем первый элемент массива, так как данные из users и employee_work_exp будут одинаковыми для всех записей
       const firstResult = results[0];
 
-      // Формируем результирующий объект JSON
       const resultObject = {
         login: firstResult.login,
         complectName: firstResult.complectName,
@@ -202,6 +218,82 @@ app.get('/api/dataExpEmployee/:id_doc', async (req, res) => {
     } else {
       res.status(404).json({ error: 'Таблица не найдена' });
     }
+  });
+});
+
+
+app.post('/api/dataExpEmployee', async (req, res) => {
+  const { authkey } = req.body;
+
+  const checkAdminQuery = `
+    SELECT admin_lvl FROM users WHERE authkey = ?;
+  `;
+
+  connection.query(checkAdminQuery, [authkey], (adminErr, adminResults) => {
+    if (adminErr) {
+      console.error('Error checking admin_lvl:', adminErr);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    const isAdmin = adminResults.length > 0 && adminResults[0].admin_lvl > 0;
+
+    let dataQuery;
+    let queryParams;
+
+    if (isAdmin) {
+      dataQuery = `
+        SELECT 
+          ewe.id, 
+          u.complectName AS userName, 
+          ewe.dateCreate, 
+          ewe.disabled, 
+          ewe.lastEditFrom, 
+          ewe.timeLastEdit, 
+          o.name_of_organization AS orgName, 
+          r.name AS regionName, 
+          c.name AS cityName, 
+          u.complectName AS lastEditFrom, 
+          ewe.timeLastEdit
+        FROM employee_work_exp ewe
+        INNER JOIN users u ON ewe.id_user = u.id
+        INNER JOIN orgazizations o ON ewe.id_org = o.id
+        INNER JOIN regions r ON o.region = r.id
+        INNER JOIN cities c ON o.city = c.id;
+      `;
+      queryParams = [];
+    } else {
+      dataQuery = `
+        SELECT 
+          ewe.id, 
+          u.complectName AS userName, 
+          ewe.dateCreate, 
+          ewe.disabled, 
+          ewe.lastEditFrom, 
+          ewe.timeLastEdit, 
+          o.name_of_organization AS orgName, 
+          r.name AS regionName, 
+          c.name AS cityName, 
+          u.complectName AS lastEditFrom, 
+          ewe.timeLastEdit
+        FROM employee_work_exp ewe
+        INNER JOIN users u ON ewe.id_user = u.id
+        INNER JOIN orgazizations o ON ewe.id_org = o.id
+        INNER JOIN regions r ON o.region = r.id
+        INNER JOIN cities c ON o.city = c.id
+        WHERE u.authkey = ?;
+      `;
+      queryParams = [authkey];
+    }
+
+    connection.query(dataQuery, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+      res.json(results);
+    });
   });
 });
 

@@ -32,11 +32,14 @@ function Login() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setAuthResult(true);
-          sessionStorage.setItem('authIs', 'true');
-          sessionStorage.setItem('auth', data.authkey);
-          sessionStorage.setItem('userInfo', JSON.stringify(data));
-          window.location.replace('http://localhost:3000/');
+            setAuthResult(true);
+          setTimeout(() => {
+            sessionStorage.setItem('authIs', 'true');
+            sessionStorage.setItem('auth', data.authkey);
+            sessionStorage.setItem('userInfo', JSON.stringify(data));
+            window.location.replace('http://localhost:3000/');
+          }, 1000);
+
         } else {
           setAuthResult(false);
         }
@@ -113,13 +116,13 @@ function Login() {
 
                 <div>
                   <p className="mb-0">
-                    <a href="#!" className="link-primary fw-bold link-underline link-underline-opacity-0">
+                    <a href="/restore-password" className="link-primary fw-bold link-underline link-underline-opacity-0">
                       Забыли пароль?
                     </a>
                   </p>
                   <p className="mb-0">
-                    <a href="#!" className="link-primary fw-bold link-underline link-underline-opacity-0">
-                      Зарегистрировать организацию?
+                    <a href="/registration" className="link-primary fw-bold link-underline link-underline-opacity-0">
+                      Зарегистрироваться?
                     </a>
                   </p>
                 </div>

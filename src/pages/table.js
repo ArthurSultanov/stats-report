@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { showAlert } from '../tech/alert';
 import { url_api } from '../tech/config';
+import * as XLSX from 'xlsx';
+
+
 const DynamicTable = () => {
   const userInfo = JSON.parse(sessionStorage.getItem("userInfo")).userInfo;
   const [tableData, setTableData] = useState([
     { col1: userInfo.complectName, col2: '', col3: 1, col4: 0, col5: 0, col6: 0, col7: 0, col8: 0, col9: 0, col10: 0, col11: 0, col12: 0, col13: 0, col14: 0, col15: 0, col16: 0, col17: 0, col18: 0 },
   ]);
-
-
+  
 
   const handlerInsert = () => {
     setTableData((prevData) => [
@@ -18,43 +20,81 @@ const DynamicTable = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:3110/api/dataExpEmployee/6');
-      const result = await response.json();
-
-      setTableData(prevData => [
-        ...prevData.slice(1), 
-        ...result.table.map((rowData, index) => {
-          const allExpObject = JSON.parse(rowData.all_exp);
-          const teachExpObject = JSON.parse(rowData.teach_exp);
-
-          return {
+      let id_doc = new URLSearchParams(window.location.search).get("id_doc");
+  
+      if (!id_doc) {
+        // Если id_doc отсутствует, создаем новый документ с пустой таблицей
+        setTableData([
+          {
             col1: userInfo.complectName,
-            col2: rowData.name_of_indicators || '',
-            col3: prevData.length + 1 + index,
+            col2: '',
+            col3: 1,
             col4: 0,
-            col5: allExpObject.col5 || 0,
-            col6: allExpObject.col6 || 0,
-            col7: allExpObject.col7 || 0,
-            col8: allExpObject.col8 || 0,
-            col9: allExpObject.col9 || 0,
-            col10: allExpObject.col10 || 0,
+            col5: 0,
+            col6: 0,
+            col7: 0,
+            col8: 0,
+            col9: 0,
+            col10: 0,
             col11: 0,
-            col12: teachExpObject.col12 || 0,
-            col13: teachExpObject.col13 || 0,
-            col14: teachExpObject.col14 || 0,
-            col15: teachExpObject.col15 || 0,
-            col16: teachExpObject.col16 || 0,
-            col17: teachExpObject.col17 || 0,
-            col18: rowData.not_exp,
-          };
-        }),
-      ]);
+            col12: 0,
+            col13: 0,
+            col14: 0,
+            col15: 0,
+            col16: 0,
+            col17: 0,
+            col18: 0,
+          },
+        ]);
+      } else {
+        // Если id_doc присутствует, запрашиваем данные с сервера
+        const response = await fetch(url_api + '/api/dataExpEmployee/' + id_doc);
+        const result = await response.json();
+  
+        // Проверяем, что данные получены успешно
+        if (response.ok) {
+          // Обработка данных и заполнение таблицы
+          setTableData((prevData) => [
+            ...prevData.slice(1),
+            ...result.table.map((rowData, index) => {
+              const allExpObject = JSON.parse(rowData.all_exp);
+              const teachExpObject = JSON.parse(rowData.teach_exp);
+  
+              return {
+                col1: userInfo.complectName,
+                col2: rowData.name_of_indicators || '',
+                col3: prevData.length + 1 + index,
+                col4: 0,
+                col5: allExpObject.col5 || 0,
+                col6: allExpObject.col6 || 0,
+                col7: allExpObject.col7 || 0,
+                col8: allExpObject.col8 || 0,
+                col9: allExpObject.col9 || 0,
+                col10: allExpObject.col10 || 0,
+                col11: 0,
+                col12: teachExpObject.col12 || 0,
+                col13: teachExpObject.col13 || 0,
+                col14: teachExpObject.col14 || 0,
+                col15: teachExpObject.col15 || 0,
+                col16: teachExpObject.col16 || 0,
+                col17: teachExpObject.col17 || 0,
+                col18: rowData.not_exp,
+              };
+            }),
+          ]);
+        } else {
+          console.error('Error fetching data:', result.error);
+        }
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+
+  
   const effectRan = useRef(false);
   useEffect(() => {
+    
     if (!effectRan.current) {
     fetchData();
    }
@@ -69,12 +109,11 @@ const DynamicTable = () => {
       return newData;
     });
   };
-
   const handleSave = () => {
+    let id_doc = new URLSearchParams(window.location.search).get("id_doc");
     const tableRows = [];
   
     tableData.forEach((row) => {
-  
       const rowObject = {
         name_of_indicators: row.col2,
         common: {
@@ -103,14 +142,17 @@ const DynamicTable = () => {
     const jsonSchema = {
       table: tableRows,
     };
-
+  
     const requestBody = {
       user_id: userInfo.id,
       table: tableRows,
     };
-
+  
     console.log('JSON Schema:', jsonSchema);
-    fetch(url_api+'/api/addWorkExperience', {
+  
+    const url = id_doc ? url_api + '/api/setWorkExperience/' + id_doc : url_api + '/api/addWorkExperience';
+  
+    fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -119,15 +161,14 @@ const DynamicTable = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data); // Обработка успешного ответа от сервера
+        console.log(data);
+        showAlert('Таблица успешно сохранена!\n<a href="#"><strong>Перейти к списку</strong></a>');
       })
       .catch((error) => {
         console.error('Ошибка при отправке запроса:', error);
       });
-
-    showAlert('Таблица успешно сохранена!\n<a href="#"><strong>Перейти к списку</strong></a>', 'success');
   };
-
+  
   const handleInputChange = (rowIndex, colName, value) => {
     const intValue = parseInt(value, 10);
   
@@ -146,16 +187,31 @@ const DynamicTable = () => {
     });
   };
 
+  const exportToExcel = () => {
+    const ws = XLSX.utils.table_to_sheet(document.getElementById('experinceTable'));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, 'Персонал2.xls');
+  };
+
   return (
     <div>
-      <table className="iksweb">
+        <div className="d-flex flex-wrap justify-content-center py-1 mb-2">
+                <span className="d-flex align-items-center mb-1 mb-md-0 me-md-auto text-dark fs-5 ms-3"><a href="/experience">Распределение персонала по стажу работы</a></span>
+            <ul className="nav nav-pills me-3">
+                <button className="btn btn-primary zoom-5" aria-current="page" onClick={exportToExcel}>
+                    Экспорт в CSV
+                </button>
+            </ul>
+        </div>
+      <table className="iksweb" id="experinceTable">
         <tr className='bg-primary'>
             <th className='bg-primary' rowSpan={3} width="10%">
               Наименование образовательной организации (филиала)(повторять в
               каждой строке)
             </th>
             <th className='bg-primary' width="15%" rowSpan={2}>Наименование показателей</th>
-            <th className='bg-primary' rowSpan={2} width="5%">№ строки</th>
+            <th className='bg-primary' rowSpan={2} width="3%">№ строки</th>
             <th className='bg-primary' rowSpan={2} width="5%">Всего (сумма гр. 4-9)</th>
             <th className='bg-primary' colSpan={6} width="5%">из гр. 3 - имеют общий стаж работы, лет</th>
             <th className='bg-primary' rowSpan={2}>
@@ -164,22 +220,22 @@ const DynamicTable = () => {
             <th className='bg-primary' colSpan={6}>
               из гр. 10 - имеют педагогический стаж работы, лет
             </th>
-            <th className='bg-primary' rowSpan={2}>Не имеют педагогического стажа работы</th>
+            <th className='bg-primary' rowSpan={2} width="7%">Не имеют педагогического стажа работы</th>
             <th className='bg-primary' rowSpan={3}>Действие</th>
           </tr>
           <tr>
-            <th className='bg-primary' width="5%">до 3</th>
-            <th className='bg-primary' width="5%">от 3 до 5</th>
-            <th className='bg-primary' width="5%">от 5 до 10</th>
-            <th className='bg-primary' width="5%">от 10 до 15</th>
-            <th className='bg-primary' width="5%">от 15 до 20</th>
-            <th className='bg-primary' width="5%">20 и более</th>
-            <th className='bg-primary' width="5%">до 3</th>
-            <th className='bg-primary' width="5%">от 3 до 5</th>
-            <th className='bg-primary' width="5%">от 5 до 10</th>
-            <th className='bg-primary' width="5%">от 10 до 15</th>
-            <th className='bg-primary' width="5%">от 15 до 20</th>
-            <th className='bg-primary' width="5%">20 и более</th>
+            <th className='bg-primary' width="7%">до 3</th>
+            <th className='bg-primary' width="7%">от 3 до 5</th>
+            <th className='bg-primary' width="7%">от 5 до 10</th>
+            <th className='bg-primary' width="7%">от 10 до 15</th>
+            <th className='bg-primary' width="7%">от 15 до 20</th>
+            <th className='bg-primary' width="7%">20 и более</th>
+            <th className='bg-primary' width="7%">до 3</th>
+            <th className='bg-primary' width="7%">от 3 до 5</th>
+            <th className='bg-primary' width="7%">от 5 до 10</th>
+            <th className='bg-primary' width="7%">от 10 до 15</th>
+            <th className='bg-primary' width="7%">от 15 до 20</th>
+            <th className='bg-primary' width="7%">20 и более</th>
           </tr>
           <tr>
             <th className='bg-primary'>1</th>
@@ -205,6 +261,7 @@ const DynamicTable = () => {
             <tr key={row.id}>
               {Object.keys(row).map((colName, index) => (
                 <td key={colName}>
+                  <span className='d-none'>{row[colName]}</span>
                   <input
                     className="form-control"
                     id={row[colName]}
@@ -222,8 +279,8 @@ const DynamicTable = () => {
           ))}
         </tbody>
       </table>
-      <button className='position-absolute start-100 btn btn-sm btn-primary rounded-pill' style={{'margin': '0px -6rem'}} onClick={handlerInsert}><i className="fas fa-add"></i> </button>
-      <button className='position-absolute start-100 btn btn-sm btn-success rounded-pill' style={{'margin': '0px -3rem'}} onClick={() => handleSave(0)}><i className="fas fa-save"></i> </button>
+      <button className='position-absolute start-100 btn btn-sm btn-primary zoom-5 rounded-pill' style={{'margin': '0px -6rem'}} onClick={handlerInsert}><i className="fas fa-add"></i> </button>
+      <button className='position-absolute start-100 btn btn-sm btn-success zoom-5 rounded-pill' style={{'margin': '0px -3rem'}} onClick={() => handleSave(0)}><i className="fas fa-save"></i> </button>
     </div>
   );
 };

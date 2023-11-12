@@ -39,3 +39,48 @@ table.iksweb th {
 
 
   
+
+.jump, .jump-10, .jump-15, .jump-20{
+    transition: transform 0.3s ease-in-out;
+  }
+ 
+  .jump:hover {
+    transform: translateY(-5px);
+  }  
+  .jump-10:hover {
+    transform: translateY(-10px);
+  }
+  .jump-15:hover {
+    transform: translateY(-15px);
+  }
+  .jump-20:hover {
+    transform: translateY(-20px);
+  }
+
+
+  .zoom-5, .zoom-10, .zoom-15, .zoom-20{
+	transition: transform 0.3s;
+  }
+
+  .zoom-5:hover {
+	transform: scale(1.05);
+  }
+  .zoom-10:hover {
+	transform: scale(1.1);
+  }
+  .zoom-15:hover {
+	transform: scale(1.15);
+  }
+  .zoom-20:hover {
+	transform: scale(1.2);
+  }
+
+
+  .highlight {
+    animation: mirrorEffect 1s ease-in-out alternate;
+  }
+
+
+.bg-lite-light  {
+  background: #ecf0f3;
+}
