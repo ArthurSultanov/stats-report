@@ -84,3 +84,7 @@ table.iksweb th {
 .bg-lite-light  {
   background: #ecf0f3;
 }
+
+.modal {
+  background-color: #03030fab;
+}

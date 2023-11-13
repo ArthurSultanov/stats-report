@@ -13,6 +13,7 @@ const Experince = () => {
     const authkey = JSON.parse(sessionStorage.getItem("userInfo")).authkey;
 
     useEffect(() => {
+        redirectToLogin();
         fetch('http://localhost:3110/api/dataExpEmployee', {
             method: 'POST',
             headers: {
@@ -45,7 +46,7 @@ const Experince = () => {
                 <button className="btn btn-danger zoom-5 mx-3" onClick={handlerTest}>
                     для администратора добавить фильтры по организации / области / городу*
                 </button>
-                <a href="#!" className="btn btn-primary zoom-5">
+                <a href="experience?id_doc=newDoc" className="btn btn-primary zoom-5">
                     Добавить новый документ
                 </a>
             </div>

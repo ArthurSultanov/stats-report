@@ -182,6 +182,14 @@ app.get('/api/dataExpEmployee/:id_doc', async (req, res) => {
       u.login,
       u.complectName,
       ewe.dateCreate,
+      ewe.lastEditFrom,
+      ewe.timeLastEdit,
+      ewe.disabled,
+      ewe.id_org,
+      org.name_of_organization,
+      c.name,
+      c.id_region,
+      r.name as r_name,
       ewe.id_user,
       eweb.name_of_indicators,
       eweb.all_exp,
@@ -193,6 +201,12 @@ app.get('/api/dataExpEmployee/:id_doc', async (req, res) => {
       employee_work_exp AS ewe ON eweb.id_doc = ewe.id
     JOIN
       users AS u ON ewe.id_user = u.id
+    JOIN
+      cities AS c ON ewe.id_org = c.id
+    JOIN
+      regions AS r ON c.id_region = r.id
+    JOIN
+      orgazizations AS org ON ewe.id_org = org.id
     WHERE
       eweb.id_doc = ?
   `;
@@ -202,10 +216,18 @@ app.get('/api/dataExpEmployee/:id_doc', async (req, res) => {
       const firstResult = results[0];
 
       const resultObject = {
+        id_user: firstResult.id_user,
         login: firstResult.login,
         complectName: firstResult.complectName,
         dateCreate: firstResult.dateCreate,
-        id_user: firstResult.id_user,
+        name_org: firstResult.name_of_organization,
+        lastEditFrom: firstResult.lastEditFrom,
+        timeLastEdit: firstResult.timeLastEdit,
+        disabled: firstResult.disabled,
+        id_city: firstResult.id_city,
+        cityname: firstResult.name,
+        id_region: firstResult.id_region,
+        r_name: firstResult.r_name,
         table: results.map((row) => ({
           name_of_indicators: row.name_of_indicators,
           all_exp: row.all_exp,
