@@ -1,8 +1,119 @@
 import React from 'react';
+import Header from './Header';
+import * as XLSX from 'xlsx';
+import { useState } from 'react';
+import { url_api } from '../tech/config';
+
 
 const ContingentTable = () => {
+	const userInfo = JSON.parse(sessionStorage.getItem("userInfo")).userInfo;
+  const [tableData, setTableData] = useState([ ]);
+  const [author, setAuthor] = useState('');
+  const [lastEditor, setLastEditor] = useState('');
+  const [lastTimeEdit, setLastTimeEdit] = useState('');
+  const [city, setCity] = useState('');
+  const [region, setRegion] = useState('');
+  const [dateCreateDoc, setDateCreateDoc] = useState('');
+	
+	const exportToExcel = () => {
+		const ws = XLSX.utils.table_to_sheet(document.getElementById('contingentTable'));
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+		XLSX.writeFile(wb, 'Контингент.xls');
+	  };
+	  const fetchData = async () => {
+		try {
+		  const id_doc = new URLSearchParams(window.location.search).get("id_doc");
+	
+		  if (!id_doc || id_doc === "newDoc") {
+			setTableData([
+			  { col1: '1замени на данные с api', col2: '', col3: 1, col4: 0, col5: 0, col6: 0, col7: 0, col8: 0, col9: 0, col10: 0, col11: 0, col12: 0, col13: 0, col14: 0, col15: 0, col16: 0, col17: 0, col18: 0 },
+			]);
+		  } else {
+			// If id_doc is present, fetch data from the server
+			const response = await fetch(url_api + '/api/dataExpEmployee/' + id_doc);
+			const result = await response.json();
+	
+			if (response.ok) {
+			  setTableData((prevData) => [
+				...prevData.slice(1),
+				...result.table.map((rowData, index) => {
+				  console.log(result);
+				  const allExpObject = JSON.parse(rowData.all_exp);
+				  const teachExpObject = JSON.parse(rowData.teach_exp);
+	
+				  setAuthor(result.complectName);
+				  setLastEditor(result.lastEditFrom);
+				  setLastTimeEdit(result.timeLastEdit);
+				  setCity(result.cityname);
+				  setRegion(result.r_name);
+	
+				  return {
+					col1: result.name_org,
+					col2: rowData.name_of_indicators || '',
+					col3: prevData.length + 1 + index,
+					col4: ((allExpObject.col5 || 0) + (allExpObject.col6 || 0) + (allExpObject.col7 || 0) + (allExpObject.col8 || 0) + (allExpObject.col9 || 0) + (allExpObject.col10 || 0)) || 0,
+					col5: allExpObject.col5 || 0,
+					col6: allExpObject.col6 || 0,
+					col7: allExpObject.col7 || 0,
+					col8: allExpObject.col8 || 0,
+					col9: allExpObject.col9 || 0,
+					col10: allExpObject.col10 || 0,
+					col11: ((teachExpObject.col12 || 0) + (teachExpObject.col12 || 0) + (teachExpObject.col13 || 0) + (teachExpObject.col14 || 0) + (teachExpObject.col15 || 0) + (teachExpObject.col16 || 0) + (teachExpObject.col17 || 0)) ||  0,
+					col12: teachExpObject.col12 || 0,
+					col13: teachExpObject.col13 || 0,
+					col14: teachExpObject.col14 || 0,
+					col15: teachExpObject.col15 || 0,
+					col16: teachExpObject.col16 || 0,
+					col17: teachExpObject.col17 || 0,
+					col18: rowData.not_exp,
+				  };
+				}),
+			  ]);
+			} else {
+			  console.error('Error fetching data:', result.error);
+			}
+		  }
+		} catch (error) {
+		  console.error('Error fetching data:', error);
+		}
+	  };
+	  const handleDelete = (rowIndex) => {
+		setTableData((prevData) => {
+		  const newData = [...prevData];
+		  newData.splice(rowIndex, 1);
+		  return newData;
+		});
+	  };
+	  const handleInputChange = (rowIndex, colName, value) => {
+		const intValue = parseInt(value, 10);
+		const newValue = colName === 'col2' ? value : isNaN(intValue) ? 0 : Math.min(Math.max(0, intValue), 999);
+	
+		setTableData((prevData) => {
+		  const newData = [...prevData];
+		  newData[rowIndex][colName] = newValue;
+	
+		  if (colName === 'col5' || colName === 'col6' || colName === 'col7' || colName === 'col8' || colName === 'col9' || colName === 'col10') {
+			newData[rowIndex].col4 = parseInt(newData[rowIndex].col5) + parseInt(newData[rowIndex].col6) + parseInt(newData[rowIndex].col7) + parseInt(newData[rowIndex].col8) + parseInt(newData[rowIndex].col9) + parseInt(newData[rowIndex].col10);
+		  } else if (colName === 'col12' || colName === 'col13' || colName === 'col14' || colName === 'col15' || colName === 'col16' || colName === 'col17') {
+			newData[rowIndex].col11 = parseInt(newData[rowIndex].col13) + parseInt(newData[rowIndex].col14) + parseInt(newData[rowIndex].col15) + parseInt(newData[rowIndex].col16) + parseInt(newData[rowIndex].col17) + parseInt(newData[rowIndex].col12);
+		  }
+		  return newData;
+		});
+	  };
+	  
     return (
+		<div>
+        <Header />
         <div>
+		<div className="d-flex flex-wrap justify-content-center py-1 mb-2">
+                <span className="d-flex align-items-center mb-1 mb-md-0 me-md-auto text-dark fs-5 ms-3"><a href="/contingent">Распределение </a></span>
+            <ul className="nav nav-pills me-3">
+                <button className="btn btn-primary zoom-5" aria-current="page" onClick={exportToExcel}>
+                    Экспорт в CSV
+                </button>
+            </ul>
+        </div>
             <table className="iksweb">
 	<tbody>
 		<tr>
@@ -70,37 +181,31 @@ const ContingentTable = () => {
 			<th className="bg-primary">27</th>
 		</tr>
 		<tr>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
+		{tableData.map((row, rowIndex) => (
+            <tr key={row.id}>
+              {Object.keys(row).map((colName, index) => (
+                <td key={colName}>
+                  <span className='d-none'>{row[colName]}</span>
+                  <input
+                    className="form-control"
+                    id={row[colName]}
+                    type="text"
+                    value={row[colName]}
+                    onChange={(e) => handleInputChange(rowIndex, colName, e.target.value)}
+                    disabled={index === 0 || index === 2 || index === 3 || index === 10}
+                  />
+                </td>
+              ))}
+              <td className='position-relative'>
+                <button className='btn btn-danger position-absolute start-50 translate-middle' onClick={() => handleDelete(rowIndex)}><i className="fas fa-window-close"></i> </button>
+              </td>
+            </tr>
+          ))}
 		</tr>
 	</tbody>
 </table>
         </div>
+		</div>
     );
 };
 

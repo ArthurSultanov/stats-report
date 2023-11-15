@@ -18,7 +18,8 @@ import A_Configurate from './pages/admin/A_Configurate';
 import Signin from './pages/Signin'
 import Restore from './pages/Restore';
 import A_Organization from './pages/admin/A_Organization';
-
+import Testiq from './pages/test';
+import ContingentTable from './pages/ContingentTable';
 function App() {
   return (
     <GlobalContextProvider>
@@ -30,8 +31,13 @@ function App() {
             <Route path="/invalid" exact  element={<Inv/>} />
             <Route path="/eductions" exact element={<Eduction/>} />
             <Route path="/contingent" exact element={<Contingent/>} />
+            <Route path="/contingent-table" exact element={<ContingentTable/>} />
+
             <Route path="/registration" exact element={<Signin/>} />
             <Route path="/restore-password" exact element={<Restore/>} />
+
+
+            <Route path="/test" exact element={<Testiq/>} />
 
             <Route path="/admin-panel" exact element={<A_Main/>} />
             <Route path="/admin-panel/users" element={<A_users />} />

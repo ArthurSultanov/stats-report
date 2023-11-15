@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { showAlert } from '../tech/alert';
-
 import { redirectToLogin} from '../tech/checking';
 import { formatDate } from '../tech/formatterDate';
 import Header from './Header';
 import DynamicTable from './table';
+import { url_api } from '../tech/config';
 
 const Experince = () => {
     redirectToLogin();
@@ -14,7 +14,7 @@ const Experince = () => {
 
     useEffect(() => {
         redirectToLogin();
-        fetch('http://localhost:3110/api/dataExpEmployee', {
+fetch(url_api+'/api/dataExpEmployee', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
@@ -30,6 +30,7 @@ const Experince = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const idDocParam = queryParams.get('id_doc');
     const handlerTest = () => {
+        showAlert('Кнопка для напоминания!!! Фильтры по городу / области / организации\nИ возможно сортировка');
     }
     return (        
     <div>
@@ -74,7 +75,7 @@ const Experince = () => {
                     <td>{formatDate(item.dateCreate)}</td>
                     <td>{item.cityName}</td>
                     <td>{item.regionName}</td>
-                    <td><a href={`/experience?id_doc=${item.id}`} className='btn btn-primary zoom-5'>Перейти</a><button className='btn btn-danger mx-1 zoom-5'>Удалить</button></td>
+                    <td><a href={`/experience?id_doc=${item.id}`} className='btn btn-primary zoom-5'>Перейти</a><button className='btn btn-danger mx-1 zoom-5' disabled="true">Удалить</button></td>
                 </tr>
                 )
                 ))}
@@ -87,4 +88,3 @@ const Experince = () => {
 };
 
 export default Experince;
-

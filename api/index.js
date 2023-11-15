@@ -319,6 +319,215 @@ app.post('/api/dataExpEmployee', async (req, res) => {
   });
 });
 
+app.post('/api/contingent', async (req, res) => {
+  const { authkey } = req.body;
+
+  const checkAdminQuery = `
+    SELECT admin_lvl FROM users WHERE authkey = ?;
+  `;
+  connection.query(checkAdminQuery, [authkey], (adminErr, adminResults) => {
+    if (adminErr) {
+      console.error('Error checking admin_lvl:', adminErr);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    const isAdmin = adminResults.length > 0 && adminResults[0].admin_lvl > 0;
+    let dataQuery;
+    let queryParams;
+
+    if (isAdmin) {
+      dataQuery = `
+        SELECT 
+          enrl.id, 
+          u.complectName AS userName, 
+          enrl.dateCreate, 
+          enrl.disabled, 
+          o.name_of_organization AS orgName, 
+          r.name AS regionName, 
+          c.name AS cityName
+        FROM enrollment enrl
+        INNER JOIN users u ON enrl.id_user = u.id
+        INNER JOIN orgazizations o ON enrl.id_org = o.id
+        INNER JOIN regions r ON o.region = r.id
+        INNER JOIN cities c ON o.city = c.id;
+      `;
+      queryParams = [];
+    } else {
+      dataQuery = `
+        SELECT 
+          enrl.id, 
+          u.complectName AS userName, 
+          enrl.dateCreate, 
+          enrl.disabled, 
+          o.name_of_organization AS orgName, 
+          r.name AS regionName, 
+          c.name AS cityName
+        FROM enrollment enrl
+        INNER JOIN users u ON enrl.id_user = u.id
+        INNER JOIN orgazizations o ON enrl.id_org = o.id
+        INNER JOIN regions r ON o.region = r.id
+        INNER JOIN cities c ON o.city = c.id;
+        WHERE u.authkey = ?;
+      `;
+      queryParams = [authkey];
+    }
+
+    connection.query(dataQuery, queryParams, (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+      res.json(results);
+    });
+  });
+});
+
+app.get('/api/contingent-table/:id_doc', async (req, res) => {
+  const id_doc = req.params.id_doc;
+  const query = `
+    SELECT
+      u.login,
+      u.complectName,
+      ewe.dateCreate,
+      ewe.lastEditFrom,
+      ewe.timeLastEdit,
+      ewe.disabled,
+      ewe.id_org,
+      org.name_of_organization,
+      c.name,
+      c.id_region,
+      r.name as r_name,
+      ewe.id_user,
+      eweb.name_of_indicators,
+      eweb.all_exp,
+      eweb.teach_exp,
+      eweb.not_exp
+    FROM
+      employee_work_exp_body AS eweb
+    JOIN
+      employee_work_exp AS ewe ON eweb.id_doc = ewe.id
+    JOIN
+      users AS u ON ewe.id_user = u.id
+    JOIN
+      cities AS c ON ewe.id_org = c.id
+    JOIN
+      regions AS r ON c.id_region = r.id
+    JOIN
+      orgazizations AS org ON ewe.id_org = org.id
+    WHERE
+      eweb.id_doc = ?
+  `;
+  connection.query(query, [id_doc], (err, results) => {
+    if (err) throw err;
+    if (results.length > 0) {
+      const firstResult = results[0];
+
+      const resultObject = {
+        id_user: firstResult.id_user,
+        login: firstResult.login,
+        complectName: firstResult.complectName,
+        dateCreate: firstResult.dateCreate,
+        name_org: firstResult.name_of_organization,
+        lastEditFrom: firstResult.lastEditFrom,
+        timeLastEdit: firstResult.timeLastEdit,
+        disabled: firstResult.disabled,
+        id_city: firstResult.id_city,
+        cityname: firstResult.name,
+        id_region: firstResult.id_region,
+        r_name: firstResult.r_name,
+        table: results.map((row) => ({
+          name_of_indicators: row.name_of_indicators,
+          all_exp: row.all_exp,
+          teach_exp: row.teach_exp,
+          not_exp: row.not_exp,
+        })),
+      };
+
+      res.json(resultObject);
+    } else {
+      res.status(404).json({ error: 'Таблица не найдена' });
+    }
+  });
+});
+
+
+app.post('/api/users', (req, res) => {
+  const authkey = req.body.authkey;
+
+  // Проверка аутентификации пользователя
+  const authCheckQuery = 'SELECT admin_lvl FROM users WHERE authkey = ?';
+
+  connection.query(authCheckQuery, [authkey], (authErr, authResult) => {
+    if (authErr) {
+      console.error('Ошибка выполнения запроса:', authErr);
+      res.status(500).json({ error: 'Ошибка сервера' });
+    } else {
+      const adminLvl = authResult[0]?.admin_lvl || 0;
+
+      let query = '';
+      if (adminLvl > 0) {
+        query = `
+          SELECT users.id, users.dateCreate, users.banned, users.userName,  cities.name, regions.name
+          FROM users
+          INNER JOIN cities ON users.city = cities.id
+          INNER JOIN regions ON cities.id_region = regions.id
+        `;
+      } else {
+        query = `
+          SELECT users.id, users.dateCreate, users.banned, users.complectName, cities.name, regions.name
+          FROM users
+          INNER JOIN cities ON users.city = cities.id
+          INNER JOIN regions ON cities.id_region = regions.id
+          WHERE users.authkey = ?
+        `;
+      }
+
+      connection.query(query, [authkey], (err, result) => {
+        if (err) {
+          console.error('Ошибка выполнения запроса:', err);
+          res.status(500).json({ error: 'Ошибка сервера' });
+        } else {
+          res.json(result);
+        }
+      });
+    }
+  });
+});
+
+app.post('/api/updatePassword', (req, res) => {
+  const { authkey, oldpassword, newpassword, confirmpassword } = req.body;
+  connection.query(
+    'SELECT * FROM users WHERE authkey = ? AND password = ?',
+    [authkey, hashPassword(oldpassword)],
+    (error, results) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Ошибка сервера' });
+      }
+
+      if (results.length === 0) {
+        return res.status(401).json({ message: 'Неверные учетные данные' });
+      }
+      if (newpassword === confirmpassword) {
+        connection.query(
+          'UPDATE users SET password = ? WHERE authkey = ?',
+          [hashPassword(newpassword), authkey],
+          (updateError) => {
+            if (updateError) {
+              console.error(updateError);
+              return res.status(500).json({ message: 'Ошибка сервера' });
+            }
+            return res.status(200).json({ message: 'Пароль успешно обновлен' });
+          }
+        );
+      } else {
+        return res.status(400).json({ message: 'Новый пароль и подтверждение пароля не совпадают' });
+      }
+    }
+  );
+});
 
 app.listen(port, () => {
     console.log(`Сервер запущен на порту: ${port}`);
